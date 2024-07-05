@@ -11,12 +11,20 @@ import (
 
 // Карта для преобразования римских цифр в целые числа
 var romanToIntMap = map[string]int{
-	"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5,
-	"VI": 6, "VII": 7, "VIII": 8, "IX": 9, "X": 10,
+	"I": 1, "IV": 4, "V": 5, "IX": 9, "X": 10,
+	"XL": 40, "L": 50, "XC": 90, "C": 100,
+	"CD": 400, "D": 500, "CM": 900, "M": 1000,
 }
 
 // Карта для преобразования целых чисел в римские цифры
-var intToRomanMap = []string{"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"}
+var intToRomanMap = []struct {
+	value  int
+	symbol string
+}{
+	{1000, "M"}, {900, "CM"}, {500, "D"}, {400, "CD"},
+	{100, "C"}, {90, "XC"}, {50, "L"}, {40, "XL"},
+	{10, "X"}, {9, "IX"}, {5, "V"}, {4, "IV"}, {1, "I"},
+}
 
 func main() {
 	// Создание нового считывателя для ввода с консоли
@@ -112,17 +120,34 @@ func splitInput(input string) []string {
 
 // Функция для преобразования римских цифр в целые числа
 func romanToInt(roman string) int {
-	value, exists := romanToIntMap[roman]
-	if !exists {
-		panic("Неправильная римская цифра")
+	total := 0
+	i := 0
+	for i < len(roman) {
+		if i+1 < len(roman) {
+			if val, exists := romanToIntMap[roman[i:i+2]]; exists {
+				total += val
+				i += 2
+				continue
+			}
+		}
+		if val, exists := romanToIntMap[roman[i:i+1]]; exists {
+			total += val
+			i++
+		} else {
+			panic("Неправильная римская цифра")
+		}
 	}
-	return value
+	return total
 }
 
 // Функция для преобразования целых чисел в римские цифры
 func intToRoman(num int) string {
-	if num > 0 && num < len(intToRomanMap) {
-		return intToRomanMap[num]
+	var result strings.Builder
+	for _, entry := range intToRomanMap {
+		for num >= entry.value {
+			result.WriteString(entry.symbol)
+			num -= entry.value
+		}
 	}
-	panic("Число выходит за пределы диапазона римских цифр")
+	return result.String()
 }
